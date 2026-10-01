@@ -6,19 +6,17 @@ import Image from "next/image";
 import type { Product } from "./lib/products";
 
 // -------------------------------------------------------------------------
-// Foto del hero (demo, libre de Unsplash). Es una imagen remota, por eso
-// usa <img> normal en vez de <Image /> de Next (no requiere configurar
-// dominios remotos en next.config). Las fotos/videos de producto sí son
-// locales y sí usan <Image />/<video> más abajo.
+// Foto del hero. Archivo local: colócalo en public/presentacion.jpg
+// (Next.js sirve cualquier archivo de public/ desde la raíz del sitio,
+// por eso la ruta aquí es "/presentacion.jpg").
 // -------------------------------------------------------------------------
-const HERO_IMAGE =
-  "https://images.unsplash.com/photo-1721761961411-8d9a578eb246?q=80&w=1400&auto=format&fit=crop";
+const HERO_IMAGE = "/presentacion.jpg";
 
 // -------------------------------------------------------------------------
 // Datos de contacto (demo) que se muestran en el cuadrito de "Cotizar"
 // -------------------------------------------------------------------------
 const CONTACT = {
-  telefono: "222 123 4567",
+  telefono: "646 150 1420",
   whatsapp: "522221234567", // formato para wa.me, sin '+' ni espacios
   horario: "Lun - Sáb · 9:00 am a 7:00 pm",
   ubicacion: "Puebla, México",
@@ -34,9 +32,9 @@ const CONTACT = {
 //   instagram: "https://www.instagram.com/neondecor_mx"
 // -------------------------------------------------------------------------
 const SOCIAL_LINKS = {
-  instagram: "https://www.instagram.com/neon_decor._?stkn=MTVzMGV4eHF2bjFkaA%3D%3D", // TODO: pegar aquí el link real de Instagram
-  facebook: "https://www.facebook.com/share/1EtWEiZdQK/", // TODO: pegar aquí el link real de Facebook
-  tiktok: "https://www.tiktok.com/@eduardo.de.los.le?_r=1&_t=ZS-99n0hwIoxPA", // TODO: pegar aquí el link real de TikTok
+  instagram: "#", // TODO: pegar aquí el link real de Instagram
+  facebook: "#", // TODO: pegar aquí el link real de Facebook
+  tiktok: "#", // TODO: pegar aquí el link real de TikTok
 };
 
 // -------------------------------------------------------------------------
@@ -515,6 +513,38 @@ export default function HomeClient({ products }: { products: Product[] }) {
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-3 sm:gap-5">
+            {/* Redes sociales — solo en escritorio (lg+). En móvil/tablet
+                viven dentro del menú hamburguesa, ver más abajo. */}
+            <div className="hidden items-center gap-2 lg:flex">
+              <a
+                href={SOCIAL_LINKS.instagram}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 rounded-full border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-cyan-400 hover:text-cyan-400"
+              >
+                <InstagramIcon className="h-3.5 w-3.5" />
+                Instagram
+              </a>
+              <a
+                href={SOCIAL_LINKS.facebook}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 rounded-full border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-cyan-400 hover:text-cyan-400"
+              >
+                <FacebookIcon className="h-3.5 w-3.5" />
+                Facebook
+              </a>
+              <a
+                href={SOCIAL_LINKS.tiktok}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-1.5 rounded-full border border-slate-700 px-3 py-1.5 text-xs font-semibold text-slate-300 transition-colors hover:border-cyan-400 hover:text-cyan-400"
+              >
+                <TikTokIcon className="h-3.5 w-3.5" />
+                TikTok
+              </a>
+            </div>
+
             <button
               type="button"
               onClick={() => setQuoteOpen(true)}
@@ -555,6 +585,37 @@ export default function HomeClient({ products }: { products: Product[] }) {
                 </a>
               ))}
             </div>
+
+            {/* Redes sociales dentro del menú hamburguesa (móvil/tablet) */}
+            <div className="mt-4 flex flex-col gap-3 border-t border-slate-800 pt-4 lg:hidden">
+              <a
+                href={SOCIAL_LINKS.instagram}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-cyan-400"
+              >
+                <InstagramIcon className="h-4 w-4" />
+                Instagram
+              </a>
+              <a
+                href={SOCIAL_LINKS.facebook}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-cyan-400"
+              >
+                <FacebookIcon className="h-4 w-4" />
+                Facebook
+              </a>
+              <a
+                href={SOCIAL_LINKS.tiktok}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 text-sm font-medium text-slate-300 hover:text-cyan-400"
+              >
+                <TikTokIcon className="h-4 w-4" />
+                TikTok
+              </a>
+            </div>
           </div>
         )}
       </header>
@@ -563,30 +624,51 @@ export default function HomeClient({ products }: { products: Product[] }) {
       {/* HERO (oscuro, foto a sangre a la derecha) */}
       {/* ============================= */}
       <section className="relative overflow-hidden bg-slate-950">
-        <div className="pointer-events-none absolute inset-y-0 right-0 hidden w-[54%] lg:block">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={HERO_IMAGE}
-            alt="Anuncio luminoso instalado en fachada de negocio"
-            className="h-full w-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/30 to-transparent" />
-        </div>
+        <div className="relative mx-auto max-w-7xl px-5 pb-10 pt-12 sm:px-8 sm:pt-16 lg:pb-8 lg:pt-20">
+          {/* Envoltorio relativo SOLO para el bloque de texto: así la
+              imagen de fondo (abajo) se posiciona contra la altura real
+              del título+párrafo, no contra toda la sección (que incluye
+              la fila de features). Antes usaba inset-y-0 sobre la sección
+              completa, lo que estiraba la imagen a una caja demasiado
+              alta y angosta y la recortaba mal. */}
+          <div className="relative">
+            {/* Imagen a sangre a la derecha (solo desktop). object-contain
+                conserva proporciones y nunca recorta ni deforma
+                presentacion.jpg, sea cual sea su relación de aspecto real. */}
+            <div className="pointer-events-none absolute -inset-y-8 right-0 hidden w-[54%] lg:block">
+  {/* Brillo/difuminado suave detrás de la foto */}
+  <img
+    src={HERO_IMAGE}
+    alt=""
+    aria-hidden="true"
+    className="absolute inset-0 h-full w-full scale-105 object-cover object-center opacity-25 blur-2xl"
+  />
 
-        <div className="relative mx-auto max-w-7xl px-5 pb-10 pt-12 sm:px-8 sm:pt-16 lg:pb-0 lg:pt-20">
-          <div className="max-w-lg">
-            <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl">
-              Letreros luminosos que hacen{" "}
-              <span className="text-cyan-400 drop-shadow-[0_0_18px_rgba(34,211,238,0.35)]">
-                brillar
-              </span>{" "}
-              tu negocio
-            </h1>
+  {/* Imagen principal */}
+  <img
+    src={HERO_IMAGE}
+    alt="Anuncio luminoso instalado en fachada de negocio"
+    className="relative h-full w-full object-cover object-center"
+  />
 
-            <p className="mt-5 max-w-md text-slate-400">
-              Diseñamos, fabricamos e instalamos anuncios luminosos de alta
-              calidad que destacan tu marca y atraen más clientes.
-            </p>
+  {/* Degradado suave hacia el texto */}
+  <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/20 to-transparent" />
+</div>
+
+            <div className="max-w-lg">
+              <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl">
+                Letreros luminosos que hacen{" "}
+                <span className="text-cyan-400 drop-shadow-[0_0_18px_rgba(34,211,238,0.35)]">
+                  brillar
+                </span>{" "}
+                tu negocio
+              </h1>
+
+              <p className="mt-5 max-w-md text-slate-400">
+                Diseñamos, fabricamos e instalamos anuncios luminosos de alta
+                calidad que destacan tu marca y atraen más clientes.
+              </p>
+            </div>
           </div>
 
           <div className="mt-8 overflow-hidden rounded-2xl border border-slate-800 lg:hidden">
@@ -773,33 +855,33 @@ export default function HomeClient({ products }: { products: Product[] }) {
           </p>
 
           {/* Redes sociales — ver SOCIAL_LINKS al inicio del archivo */}
-          <div className="flex flex-shrink-0 items-center gap-3">
+          <div className="flex flex-shrink-0 flex-wrap items-center justify-center gap-2.5">
             <a
               href={SOCIAL_LINKS.instagram}
               target="_blank"
               rel="noreferrer"
-              aria-label="Instagram"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-600 bg-slate-900 text-slate-300 transition-colors hover:border-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-400"
+              className="flex items-center gap-2 rounded-full border border-slate-600 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-400"
             >
-              <InstagramIcon className="h-5 w-5" />
+              <InstagramIcon className="h-4 w-4" />
+              Instagram
             </a>
             <a
               href={SOCIAL_LINKS.facebook}
               target="_blank"
               rel="noreferrer"
-              aria-label="Facebook"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-600 bg-slate-900 text-slate-300 transition-colors hover:border-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-400"
+              className="flex items-center gap-2 rounded-full border border-slate-600 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-400"
             >
-              <FacebookIcon className="h-5 w-5" />
+              <FacebookIcon className="h-4 w-4" />
+              Facebook
             </a>
             <a
               href={SOCIAL_LINKS.tiktok}
               target="_blank"
               rel="noreferrer"
-              aria-label="TikTok"
-              className="flex h-11 w-11 items-center justify-center rounded-full border border-slate-600 bg-slate-900 text-slate-300 transition-colors hover:border-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-400"
+              className="flex items-center gap-2 rounded-full border border-slate-600 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-400"
             >
-              <TikTokIcon className="h-5 w-5" />
+              <TikTokIcon className="h-4 w-4" />
+              TikTok
             </a>
           </div>
         </div>
