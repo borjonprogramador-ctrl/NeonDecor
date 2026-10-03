@@ -17,9 +17,9 @@ const HERO_IMAGE = "/presentacion.jpg";
 // -------------------------------------------------------------------------
 const CONTACT = {
   telefono: "646 150 1420",
-  whatsapp: "522221234567", // formato para wa.me, sin '+' ni espacios
-  horario: "Lun - Sáb · 9:00 am a 7:00 pm",
-  ubicacion: "Puebla, México",
+  whatsapp: "526461501420", // formato para wa.me, sin '+' ni espacios
+  horario: "Lun - Vie · 9:00 am a 6:00 pm",
+  ubicacion: "Ensenada, Baja California",
 };
 
 // -------------------------------------------------------------------------
@@ -32,9 +32,9 @@ const CONTACT = {
 //   instagram: "https://www.instagram.com/neondecor_mx"
 // -------------------------------------------------------------------------
 const SOCIAL_LINKS = {
-  instagram: "#", // TODO: pegar aquí el link real de Instagram
-  facebook: "#", // TODO: pegar aquí el link real de Facebook
-  tiktok: "#", // TODO: pegar aquí el link real de TikTok
+  instagram: "https://www.instagram.com/neon_decor._?stkn=MTVzMGV4eHF2bjFkaA%3D%3D", // TODO: pegar aquí el link real de Instagram
+  facebook: "https://www.facebook.com/share/1EtWEiZdQK/", // TODO: pegar aquí el link real de Facebook
+  tiktok: "https://www.tiktok.com/@eduardo.de.los.le?_r=1&_t=ZS-99n0hwIoxPA", // TODO: pegar aquí el link real de TikTok
 };
 
 // -------------------------------------------------------------------------
@@ -455,8 +455,8 @@ export default function HomeClient({ products }: { products: Product[] }) {
           <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 2" />
         </svg>
       ),
-      bold: "Entrega express",
-      gray: "desde 4 días",
+      bold: "Entrega",
+      gray: "desde 4 días habiles",
     },
     {
       icon: (
@@ -475,7 +475,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
         </svg>
       ),
       bold: "Garantía",
-      gray: "de 1 año",
+      gray: "de hasta 1 año",
     },
   ];
 
