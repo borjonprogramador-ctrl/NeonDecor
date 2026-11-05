@@ -17,6 +17,7 @@ const HERO_IMAGE = "/presentacion.jpg";
 // -------------------------------------------------------------------------
 const CONTACT = {
   telefono: "646 150 1420",
+  tel: "+526461501420", // formato para enlaces tel:
   whatsapp: "526461501420", // formato para wa.me, sin '+' ni espacios
   horario: "Lun - Vie · 9:00 am a 6:00 pm",
   ubicacion: "Ensenada, Baja California",
@@ -32,9 +33,9 @@ const CONTACT = {
 //   instagram: "https://www.instagram.com/neondecor_mx"
 // -------------------------------------------------------------------------
 const SOCIAL_LINKS = {
-  instagram: "https://www.instagram.com/neon_decor._?stkn=MTVzMGV4eHF2bjFkaA%3D%3D", // TODO: pegar aquí el link real de Instagram
-  facebook: "https://www.facebook.com/share/1EtWEiZdQK/", // TODO: pegar aquí el link real de Facebook
-  tiktok: "https://www.tiktok.com/@eduardo.de.los.le?_r=1&_t=ZS-99n0hwIoxPA", // TODO: pegar aquí el link real de TikTok
+  instagram: "https://www.instagram.com/neon_decor._",
+  facebook: "https://www.facebook.com/share/1EtWEiZdQK/",
+  tiktok: "https://www.tiktok.com/@eduardo.de.los.le", // TODO: confirmar si el negocio tiene cuenta propia de TikTok
 };
 
 // -------------------------------------------------------------------------
@@ -102,10 +103,15 @@ function QuoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
     if (!open) return;
     const previousOverflow = document.body.style.overflow;
     document.body.style.overflow = "hidden";
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") onClose();
+    }
+    window.addEventListener("keydown", handleKeyDown);
     return () => {
       document.body.style.overflow = previousOverflow;
+      window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [open]);
+  }, [open, onClose]);
 
   if (!open || !mounted) return null;
 
@@ -119,6 +125,16 @@ function QuoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
       label: "WhatsApp",
       value: CONTACT.telefono,
       href: `https://wa.me/${CONTACT.whatsapp}`,
+    },
+    {
+      icon: (
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" />
+        </svg>
+      ),
+      label: "Llamar",
+      value: CONTACT.telefono,
+      href: `tel:${CONTACT.tel}`,
     },
     {
       icon: (
@@ -148,6 +164,9 @@ function QuoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
       onClick={onClose}
     >
       <div
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="quote-title"
         className="relative max-h-[90vh] w-full max-w-sm overflow-y-auto rounded-2xl border border-slate-800 bg-slate-950 p-6 shadow-2xl"
         onClick={(e) => e.stopPropagation()}
       >
@@ -155,6 +174,7 @@ function QuoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
           type="button"
           onClick={onClose}
           aria-label="Cerrar"
+          autoFocus
           className="absolute right-4 top-4 text-slate-500 hover:text-white"
         >
           <CloseIcon />
@@ -169,7 +189,9 @@ function QuoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
           <span className="text-sm font-bold tracking-wide text-cyan-400">NEON DECOR</span>
         </div>
 
-        <h3 className="mt-4 text-lg font-bold text-white">Contáctanos para tu cotización</h3>
+        <h3 id="quote-title" className="mt-4 text-lg font-bold text-white">
+          Contáctanos para tu cotización
+        </h3>
         <p className="mt-1 text-sm text-slate-400">
           Escríbenos o llámanos, con gusto te atendemos.
         </p>
@@ -289,6 +311,9 @@ function ProductGalleryModal({
 
   return createPortal(
     <div
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="gallery-title"
       className="fixed inset-0 z-[100] flex flex-col items-center justify-center bg-black/80 p-4 backdrop-blur-sm sm:p-6"
       onClick={onClose}
     >
@@ -297,6 +322,7 @@ function ProductGalleryModal({
         type="button"
         onClick={onClose}
         aria-label="Cerrar galería"
+        autoFocus
         className="absolute right-4 top-4 z-10 flex h-11 w-11 items-center justify-center rounded-full bg-slate-900/90 text-white ring-1 ring-slate-700 transition-colors hover:bg-cyan-500 hover:text-slate-950 sm:right-6 sm:top-6"
       >
         <CloseIcon className="h-6 w-6" />
@@ -311,7 +337,9 @@ function ProductGalleryModal({
       >
         {/* Título del producto */}
         <div className="mb-4 text-center">
-          <p className="text-lg font-bold text-white sm:text-xl">{product.title}</p>
+          <p id="gallery-title" className="text-lg font-bold text-white sm:text-xl">
+            {product.title}
+          </p>
           <p className="text-sm text-slate-400">{product.subtitle}</p>
         </div>
 
@@ -366,7 +394,7 @@ function ProductGalleryModal({
                     fill
                     sizes="(max-width: 768px) 90vw, 800px"
                     className="object-contain"
-                    priority
+                    loading="eager"
                   />
                 )}
               </div>
@@ -433,9 +461,24 @@ export default function HomeClient({ products }: { products: Product[] }) {
   // Guarda qué producto está abierto en la galería (null = galería cerrada)
   const [activeProduct, setActiveProduct] = useState<Product | null>(null);
 
+  // El menú móvil se cierra con Escape o al hacer scroll.
+  useEffect(() => {
+    if (!menuOpen) return;
+    const close = () => setMenuOpen(false);
+    function handleKeyDown(e: KeyboardEvent) {
+      if (e.key === "Escape") close();
+    }
+    window.addEventListener("keydown", handleKeyDown);
+    window.addEventListener("scroll", close, { passive: true });
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+      window.removeEventListener("scroll", close);
+    };
+  }, [menuOpen]);
+
   const navLinks = [
     { label: "Productos", href: "#productos" },
-    { label: "Nosotros", href: "#valor" },
+    { label: "Por qué elegirnos", href: "#valor" },
   ];
 
   const heroFeatures = [
@@ -456,7 +499,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
         </svg>
       ),
       bold: "Entrega",
-      gray: "desde 4 días habiles",
+      gray: "desde 4 días hábiles",
     },
     {
       icon: (
@@ -513,6 +556,19 @@ export default function HomeClient({ products }: { products: Product[] }) {
           </div>
 
           <div className="flex flex-shrink-0 items-center gap-3 sm:gap-5">
+            {/* Links de navegación en línea — solo escritorio (lg+) */}
+            <div className="hidden items-center gap-5 lg:flex">
+              {navLinks.map((link) => (
+                <a
+                  key={link.label}
+                  href={link.href}
+                  className="text-sm font-medium text-slate-300 transition-colors hover:text-cyan-400"
+                >
+                  {link.label}
+                </a>
+              ))}
+            </div>
+
             {/* Redes sociales — solo en escritorio (lg+). En móvil/tablet
                 viven dentro del menú hamburguesa, ver más abajo. */}
             <div className="hidden items-center gap-2 lg:flex">
@@ -556,9 +612,10 @@ export default function HomeClient({ products }: { products: Product[] }) {
             <button
               type="button"
               onClick={() => setMenuOpen((v) => !v)}
-              aria-label="Abrir menú"
+              aria-label={menuOpen ? "Cerrar menú" : "Abrir menú"}
               aria-expanded={menuOpen}
-              className="flex h-9 w-9 items-center justify-center text-white hover:text-cyan-400"
+              aria-controls="menu-movil"
+              className="flex h-9 w-9 items-center justify-center text-white hover:text-cyan-400 lg:hidden"
             >
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} className="h-6 w-6">
                 {menuOpen ? (
@@ -572,7 +629,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
         </nav>
 
         {menuOpen && (
-          <div className="border-t border-slate-800 bg-slate-950 px-5 py-4 sm:px-8">
+          <div id="menu-movil" className="border-t border-slate-800 bg-slate-950 px-5 py-4 sm:px-8 lg:hidden">
             <div className="flex flex-col gap-4">
               {navLinks.map((link) => (
                 <a
@@ -638,29 +695,6 @@ export default function HomeClient({ products }: { products: Product[] }) {
               completa, lo que estiraba la imagen a una caja demasiado
               alta y angosta y la recortaba mal. */}
           <div className="relative">
-            {/* Imagen a sangre a la derecha (solo desktop). object-contain
-                conserva proporciones y nunca recorta ni deforma
-                presentacion.jpg, sea cual sea su relación de aspecto real. */}
-            <div className="pointer-events-none absolute -inset-y-8 right-0 hidden w-[54%] lg:block">
-              {/* Brillo/difuminado suave detrás de la foto */}
-              <img
-                src={HERO_IMAGE}
-                alt=""
-                aria-hidden="true"
-                className="absolute inset-0 h-full w-full scale-105 object-cover object-center opacity-25 blur-2xl"
-              />
-
-              {/* Imagen principal */}
-              <img
-                src={HERO_IMAGE}
-                alt="Anuncio luminoso instalado en fachada de negocio"
-                className="relative h-full w-full object-cover object-center"
-              />
-
-              {/* Degradado suave hacia el texto */}
-              <div className="absolute inset-0 bg-gradient-to-r from-slate-950 via-slate-950/20 to-transparent" />
-            </div>
-
             <div className="max-w-lg">
               <h1 className="text-4xl font-extrabold leading-[1.1] tracking-tight sm:text-5xl">
                 Letreros luminosos que hacen{" "}
@@ -675,15 +709,23 @@ export default function HomeClient({ products }: { products: Product[] }) {
                 calidad que destacan tu marca y atraen más clientes.
               </p>
             </div>
-          </div>
 
-          <div className="mt-8 overflow-hidden rounded-2xl border border-slate-800 lg:hidden">
-            {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img
-              src={HERO_IMAGE}
-              alt="Anuncio luminoso instalado en fachada de negocio"
-              className="h-56 w-full object-cover sm:h-72"
-            />
+            {/* Foto del hero: una sola imagen. En móvil/tablet va debajo del
+                texto como tarjeta; en escritorio (lg+) se posiciona a sangre
+                a la derecha. */}
+            <div className="relative mt-8 h-56 overflow-hidden rounded-2xl border border-slate-800 sm:h-72 lg:pointer-events-none lg:absolute lg:-inset-y-8 lg:right-0 lg:mt-0 lg:h-auto lg:w-[54%] lg:rounded-none lg:border-0">
+              <Image
+                src={HERO_IMAGE}
+                alt="Letrero luminoso RUTA 400 instalado por Neon Decor"
+                fill
+                preload
+                sizes="(min-width: 1024px) 54vw, 100vw"
+                className="object-cover object-center"
+              />
+              {/* Degradado suave hacia el texto, solo en el borde izquierdo
+                  para no tapar el letrero. */}
+              <div className="absolute inset-y-0 left-0 hidden w-8 bg-gradient-to-r from-slate-950 to-transparent lg:block" />
+            </div>
           </div>
 
           <div className="relative mt-10 grid grid-cols-2 gap-x-4 gap-y-6 border-t border-slate-800/80 pt-8 sm:grid-cols-4 sm:gap-6 lg:mt-14">
@@ -733,6 +775,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
                   key={p.id}
                   type="button"
                   onClick={() => setActiveProduct(p)}
+                  aria-label={`Ver galería: ${p.title} ${p.subtitle}`}
                   className="group flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-md transition-all hover:-translate-y-1 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                 >
                   <div className="relative h-32 w-full flex-shrink-0 bg-slate-100 sm:h-40">
@@ -784,7 +827,10 @@ export default function HomeClient({ products }: { products: Product[] }) {
           {/* ============================= */}
           {/* VALOR AGREGADO (caja oscura sobre fondo blanco) */}
           {/* ============================= */}
-          <div className="mt-12 grid grid-cols-1 items-center gap-8 rounded-3xl bg-slate-950 p-8 sm:mt-16 md:grid-cols-[1fr_auto] md:p-10">
+          <div
+            id="valor"
+            className="mt-12 grid scroll-mt-28 grid-cols-1 items-center gap-8 rounded-3xl bg-slate-950 p-8 sm:mt-16 md:grid-cols-[1fr_auto] md:p-10"
+          >
             <div className="grid grid-cols-1 gap-5 sm:grid-cols-2">
               {valueItems.map((item) => (
                 <div key={item.bold} className="flex items-start gap-3">
@@ -839,7 +885,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
       {/* ============================= */}
       {/* FOOTER (oscuro) */}
       {/* ============================= */}
-      <footer id="valor" className="border-t border-slate-800 bg-slate-950 py-8">
+      <footer className="border-t border-slate-800 bg-slate-950 py-8">
         <div className="mx-auto flex max-w-7xl flex-col flex-wrap items-center gap-6 px-5 text-center sm:flex-row sm:justify-between sm:px-8 sm:text-left">
           <div className="flex items-center gap-3">
             <div className="flex items-center gap-1.5 text-xl font-extrabold leading-none">
