@@ -35,7 +35,7 @@ const CONTACT = {
 const SOCIAL_LINKS = {
   instagram: "https://www.instagram.com/neon_decor._",
   facebook: "https://www.facebook.com/share/1EtWEiZdQK/",
-  tiktok: "https://www.tiktok.com/@eduardo.de.los.le", // TODO: confirmar si el negocio tiene cuenta propia de TikTok
+  tiktok: "https://www.tiktok.com/@eduardo.de.los.le", // cuenta oficial del negocio
 };
 
 // -------------------------------------------------------------------------
