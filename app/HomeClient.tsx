@@ -432,7 +432,15 @@ function ProductGalleryModal({
                 >
                   {m.type === "video" ? (
                     <>
-                      <video src={m.src} muted preload="metadata" className="h-full w-full object-cover" />
+                      {/* "#t=0.1" hace que Safari/iPhone muestre un cuadro
+                          del video como portada en vez de un cuadro negro. */}
+                      <video
+                        src={`${m.src}#t=0.1`}
+                        muted
+                        playsInline
+                        preload="metadata"
+                        className="h-full w-full object-cover"
+                      />
                       <span className="absolute inset-0 flex items-center justify-center bg-black/30">
                         <PlayIcon className="h-5 w-5 text-white" />
                       </span>
@@ -789,7 +797,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
                       />
                     ) : coverVideo ? (
                       <video
-                        src={coverVideo.src}
+                        src={`${coverVideo.src}#t=0.1`}
                         muted
                         playsInline
                         preload="metadata"
