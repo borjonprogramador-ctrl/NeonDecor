@@ -104,12 +104,10 @@ function QuoteModal({
   onClose: () => void;
   productTitles: string[];
 }) {
-  const [mounted, setMounted] = useState(false);
   const [tipo, setTipo] = useState("");
   const [medidas, setMedidas] = useState("");
   const [logo, setLogo] = useState("");
   const [ubicacion, setUbicacion] = useState("");
-  useEffect(() => setMounted(true), []);
 
   useEffect(() => {
     if (!open) return;
@@ -125,7 +123,9 @@ function QuoteModal({
     };
   }, [open, onClose]);
 
-  if (!open || !mounted) return null;
+  // Solo se abre por un clic, así que aquí `document` ya existe
+  // (en el servidor `open` siempre es false).
+  if (!open) return null;
 
   const lines = ["Hola, vi su página y quiero cotizar un letrero."];
   if (tipo) lines.push(`• Tipo: ${tipo}`);
@@ -270,16 +270,9 @@ function ProductGalleryModal({
   product: Product | null;
   onClose: () => void;
 }) {
-  const [mounted, setMounted] = useState(false);
+  // Arranca en el elemento 1. Al cambiar de producto, el componente se
+  // vuelve a montar (key={product.id} en HomeClient) y reinicia solo.
   const [activeIndex, setActiveIndex] = useState(0);
-
-  // createPortal necesita `document`, que solo existe en el navegador.
-  useEffect(() => setMounted(true), []);
-
-  // Cada vez que se abre un producto nuevo, la galería arranca en el 1.
-  useEffect(() => {
-    setActiveIndex(0);
-  }, [product?.id]);
 
   // Bloquea el scroll del fondo mientras el modal está abierto.
   useEffect(() => {
@@ -317,7 +310,8 @@ function ProductGalleryModal({
     return () => window.removeEventListener("keydown", handleKeyDown);
   }, [product, goPrev, goNext, onClose]);
 
-  if (!product || !mounted) return null;
+  // Solo hay producto después de un clic, así que `document` ya existe.
+  if (!product) return null;
 
   const media = product.media;
   const active = media[activeIndex];
@@ -581,7 +575,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
         onClose={closeQuote}
         productTitles={products.map((p) => p.title)}
       />
-      <ProductGalleryModal product={activeProduct} onClose={closeGallery} />
+      <ProductGalleryModal key={activeProduct?.id ?? "cerrada"} product={activeProduct} onClose={closeGallery} />
 
       {/* Botón flotante de WhatsApp — solo móvil/tablet */}
       <a
