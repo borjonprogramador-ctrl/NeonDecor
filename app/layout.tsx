@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Analytics } from "@vercel/analytics/next";
+import { BUSINESS_NAME, CONTACT, SITE_URL, SOCIAL_LINKS } from "./lib/site";
 import "./globals.css";
 
 const geistSans = Geist({
@@ -12,36 +14,55 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-// -------------------------------------------------------------------------
-// URL BASE DEL SITIO (dominio definitivo)
-// -------------------------------------------------------------------------
-// Todavía no existe el dominio, así que NO se inventa aquí. En vez de
-// hardcodearlo, se lee de una variable de entorno opcional. Mientras esa
-// variable no exista, Next.js simplemente usa rutas relativas (el sitio
-// funciona igual; solo faltan URLs absolutas en algunas meta tags).
-//
-// Cuando compres el dominio, solo agrega esto (local: .env.local; en
-// Vercel: Project Settings → Environment Variables) y se propaga solo,
-// sin tocar este archivo:
-//   NEXT_PUBLIC_SITE_URL=https://tudominio.com
-// -------------------------------------------------------------------------
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL;
+// La URL base del sitio vive en app/lib/site.ts (SITE_URL). Se puede
+// sobreescribir con la variable de entorno NEXT_PUBLIC_SITE_URL.
 
-const TITLE = "Neon Decor | Anuncios luminosos para tu negocio";
+const TITLE = "Neon Decor | Letreros y anuncios luminosos en Ensenada";
 const DESCRIPTION =
-  "Diseñamos, fabricamos e instalamos anuncios luminosos: letras 3D, neón LED, cajas de luz y más. Diseño profesional gratuito, entrega express e instalación con garantía.";
+  "Diseñamos, fabricamos e instalamos anuncios luminosos en Ensenada, B.C.: letras 3D, neón LED, cajas de luz y más. Diseño sin costo, entrega desde 4 días hábiles e instalación con garantía.";
 
 export const metadata: Metadata = {
-  ...(SITE_URL ? { metadataBase: new URL(SITE_URL) } : {}),
+  metadataBase: new URL(SITE_URL),
   title: TITLE,
   description: DESCRIPTION,
+  alternates: { canonical: "/" },
   openGraph: {
     title: TITLE,
     description: DESCRIPTION,
+    url: "/",
+    siteName: BUSINESS_NAME,
     images: ["/open.jpg"],
     locale: "es_MX",
     type: "website",
   },
+};
+
+// Datos del negocio para Google (JSON-LD LocalBusiness).
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "LocalBusiness",
+  name: BUSINESS_NAME,
+  description: DESCRIPTION,
+  url: SITE_URL,
+  image: `${SITE_URL}/open.jpg`,
+  telephone: CONTACT.tel,
+  email: CONTACT.email,
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: CONTACT.ciudad,
+    addressRegion: "B.C.",
+    addressCountry: "MX",
+  },
+  areaServed: CONTACT.cobertura,
+  openingHoursSpecification: [
+    {
+      "@type": "OpeningHoursSpecification",
+      dayOfWeek: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"],
+      opens: "09:00",
+      closes: "18:00",
+    },
+  ],
+  sameAs: Object.values(SOCIAL_LINKS),
 };
 
 export default function RootLayout({
@@ -52,7 +73,14 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c"),
+          }}
+        />
         {children}
+        <Analytics />
       </body>
     </html>
   );

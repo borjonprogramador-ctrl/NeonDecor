@@ -3,7 +3,11 @@
 import { useState, useEffect, useCallback } from "react";
 import { createPortal } from "react-dom";
 import Image from "next/image";
+import Link from "next/link";
+import { track } from "@vercel/analytics";
 import type { Product } from "./lib/products";
+import { CONTACT, SOCIAL_LINKS, waLink, waProductMessage } from "./lib/site";
+import { ClientsStrip, HowItWorks, QuoteRequirements, Testimonials } from "./components/Sections";
 
 // -------------------------------------------------------------------------
 // Foto del hero. Archivo local: colócalo en public/presentacion.jpg
@@ -12,31 +16,24 @@ import type { Product } from "./lib/products";
 // -------------------------------------------------------------------------
 const HERO_IMAGE = "/presentacion.jpg";
 
-// -------------------------------------------------------------------------
-// Datos de contacto (demo) que se muestran en el cuadrito de "Cotizar"
-// -------------------------------------------------------------------------
-const CONTACT = {
-  telefono: "646 150 1420",
-  tel: "+526461501420", // formato para enlaces tel:
-  whatsapp: "526461501420", // formato para wa.me, sin '+' ni espacios
-  horario: "Lun - Vie · 9:00 am a 6:00 pm",
-  ubicacion: "Ensenada, Baja California",
-};
+// Datos de contacto y redes: ver app/lib/site.ts
 
-// -------------------------------------------------------------------------
-// REDES SOCIALES
-// Reemplaza cada "#" por la URL real cuando la tengas. Para agregar una
-// red nueva en el futuro, solo se añade otra línea aquí (ej. "youtube")
-// y se usa SOCIAL_LINKS.youtube donde haga falta.
-//
-// Ejemplo de reemplazo:
-//   instagram: "https://www.instagram.com/neondecor_mx"
-// -------------------------------------------------------------------------
-const SOCIAL_LINKS = {
-  instagram: "https://www.instagram.com/neon_decor._",
-  facebook: "https://www.facebook.com/share/1EtWEiZdQK/",
-  tiktok: "https://www.tiktok.com/@eduardo.de.los.le", // cuenta oficial del negocio
-};
+// Registra un evento en Vercel Analytics (clics a WhatsApp, llamadas, etc.)
+function trackEvent(name: string, props?: Record<string, string>) {
+  try {
+    track(name, props);
+  } catch {
+    // Analytics nunca debe romper la página.
+  }
+}
+
+function WhatsAppIcon({ className = "h-4 w-4" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 24 24" fill="currentColor" className={className} aria-hidden="true">
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.77.46 3.45 1.28 4.94L2 22l5.29-1.38a9.9 9.9 0 004.75 1.21h.01c5.46 0 9.91-4.45 9.91-9.92C21.96 6.45 17.5 2 12.04 2z" />
+    </svg>
+  );
+}
 
 // -------------------------------------------------------------------------
 // Iconos reutilizables
@@ -92,11 +89,26 @@ function TikTokIcon({ className = "h-4 w-4" }: { className?: string }) {
 }
 
 // =========================================================================
-// MODAL 1: Cuadrito de contacto que abren los botones "Cotizar"
-// (sin cambios respecto a la versión anterior)
+// MODAL 1: Mini formulario de cotización (abre el botón "Cotizar").
+// No guarda nada: arma el mensaje y lo abre en WhatsApp ya escrito, para
+// que el negocio reciba desde el primer mensaje los datos para cotizar.
 // =========================================================================
-function QuoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
+const LOGO_OPTIONS = ["Sí, tengo logo", "No, necesito diseño", "No sé todavía"];
+
+function QuoteModal({
+  open,
+  onClose,
+  productTitles,
+}: {
+  open: boolean;
+  onClose: () => void;
+  productTitles: string[];
+}) {
   const [mounted, setMounted] = useState(false);
+  const [tipo, setTipo] = useState("");
+  const [medidas, setMedidas] = useState("");
+  const [logo, setLogo] = useState("");
+  const [ubicacion, setUbicacion] = useState("");
   useEffect(() => setMounted(true), []);
 
   useEffect(() => {
@@ -115,48 +127,15 @@ function QuoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
 
   if (!open || !mounted) return null;
 
-  const rows = [
-    {
-      icon: (
-        <svg viewBox="0 0 24 24" fill="currentColor" className="h-5 w-5">
-          <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.77.46 3.45 1.28 4.94L2 22l5.29-1.38a9.9 9.9 0 004.75 1.21h.01c5.46 0 9.91-4.45 9.91-9.92C21.96 6.45 17.5 2 12.04 2z" />
-        </svg>
-      ),
-      label: "WhatsApp",
-      value: CONTACT.telefono,
-      href: `https://wa.me/${CONTACT.whatsapp}`,
-    },
-    {
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M5 4h4l2 5-2.5 1.5a11 11 0 005 5L15 13l5 2v4a2 2 0 01-2 2A16 16 0 013 6a2 2 0 012-2z" />
-        </svg>
-      ),
-      label: "Llamar",
-      value: CONTACT.telefono,
-      href: `tel:${CONTACT.tel}`,
-    },
-    {
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
-          <circle cx="12" cy="12" r="9" />
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 7v5l3 2" />
-        </svg>
-      ),
-      label: "Horario de atención",
-      value: CONTACT.horario,
-    },
-    {
-      icon: (
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-5 w-5">
-          <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s-7-6.5-7-11.5A7 7 0 0119 9.5C19 14.5 12 21 12 21z" />
-          <circle cx="12" cy="9.5" r="2.5" />
-        </svg>
-      ),
-      label: "Ubicación",
-      value: CONTACT.ubicacion,
-    },
-  ];
+  const lines = ["Hola, vi su página y quiero cotizar un letrero."];
+  if (tipo) lines.push(`• Tipo: ${tipo}`);
+  if (medidas.trim()) lines.push(`• Medidas aprox.: ${medidas.trim()}`);
+  if (logo) lines.push(`• Logo: ${logo}`);
+  if (ubicacion.trim()) lines.push(`• Ubicación: ${ubicacion.trim()}`);
+  const href = waLink(lines.join("\n"));
+
+  const fieldClass =
+    "mt-1 w-full rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-500 focus:border-cyan-400 focus:outline-none";
 
   return createPortal(
     <div
@@ -180,62 +159,96 @@ function QuoteModal({ open, onClose }: { open: boolean; onClose: () => void }) {
           <CloseIcon />
         </button>
 
-        <div className="flex items-center gap-2">
-          <div className="flex items-center gap-1 text-xl font-extrabold leading-none">
-            <span className="text-cyan-400">N</span>
-            <span className="h-5 w-px bg-slate-700" />
-            <span className="text-amber-400">D</span>
-          </div>
-          <span className="text-sm font-bold tracking-wide text-cyan-400">NEON DECOR</span>
-        </div>
-
-        <h3 id="quote-title" className="mt-4 text-lg font-bold text-white">
-          Contáctanos para tu cotización
+        <h3 id="quote-title" className="pr-8 text-lg font-bold text-white">
+          Cotiza tu letrero
         </h3>
         <p className="mt-1 text-sm text-slate-400">
-          Escríbenos o llámanos, con gusto te atendemos.
+          Llena lo que sepas y te lo enviamos por WhatsApp. Todo es opcional.
         </p>
 
-        <div className="mt-5 space-y-3 rounded-xl border border-slate-800 bg-slate-900 p-4">
-          {rows.map((row) => {
-            const content = (
-              <div className="flex items-center gap-3">
-                <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-lg bg-cyan-400/10 text-cyan-400">
-                  {row.icon}
-                </span>
-                <span>
-                  <span className="block text-xs text-slate-500">{row.label}</span>
-                  <span className="block text-sm font-semibold text-white">{row.value}</span>
-                </span>
-              </div>
-            );
-            return row.href ? (
-              <a
-                key={row.label}
-                href={row.href}
-                target={row.href.startsWith("http") ? "_blank" : undefined}
-                rel="noreferrer"
-                className="block rounded-lg transition-colors hover:bg-slate-800/60"
-              >
-                {content}
-              </a>
-            ) : (
-              <div key={row.label}>{content}</div>
-            );
-          })}
+        <div className="mt-5 space-y-4">
+          <label className="block text-xs font-semibold text-slate-300">
+            Tipo de letrero
+            <select value={tipo} onChange={(e) => setTipo(e.target.value)} className={fieldClass}>
+              <option value="">Elige uno</option>
+              {productTitles.map((t) => (
+                <option key={t} value={t}>
+                  {t}
+                </option>
+              ))}
+              <option value="No sé, quiero asesoría">No sé, quiero asesoría</option>
+            </select>
+          </label>
+
+          <label className="block text-xs font-semibold text-slate-300">
+            Medidas aproximadas
+            <input
+              type="text"
+              value={medidas}
+              onChange={(e) => setMedidas(e.target.value)}
+              placeholder="Ej. 2 m de largo x 50 cm de alto"
+              className={fieldClass}
+            />
+          </label>
+
+          <fieldset>
+            <legend className="text-xs font-semibold text-slate-300">¿Tienes logo?</legend>
+            <div className="mt-1 flex flex-wrap gap-2">
+              {LOGO_OPTIONS.map((opt) => (
+                <button
+                  key={opt}
+                  type="button"
+                  onClick={() => setLogo(logo === opt ? "" : opt)}
+                  aria-pressed={logo === opt}
+                  className={`rounded-full border px-3 py-1.5 text-xs font-semibold transition-colors ${
+                    logo === opt
+                      ? "border-cyan-400 bg-cyan-400/10 text-cyan-300"
+                      : "border-slate-700 text-slate-300 hover:border-slate-500"
+                  }`}
+                >
+                  {opt}
+                </button>
+              ))}
+            </div>
+          </fieldset>
+
+          <label className="block text-xs font-semibold text-slate-300">
+            ¿Dónde se instalaría?
+            <input
+              type="text"
+              value={ubicacion}
+              onChange={(e) => setUbicacion(e.target.value)}
+              placeholder="Colonia o zona"
+              className={fieldClass}
+            />
+          </label>
         </div>
 
         <a
-          href={`https://wa.me/${CONTACT.whatsapp}`}
+          href={href}
           target="_blank"
           rel="noreferrer"
-          className="mt-5 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-500 px-6 py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-teal-400"
+          onClick={() => trackEvent("whatsapp_click", { origen: "formulario", producto: tipo || "sin elegir" })}
+          className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-teal-500 px-6 py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-teal-400"
         >
-          <svg viewBox="0 0 24 24" fill="currentColor" className="h-4 w-4">
-            <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.77.46 3.45 1.28 4.94L2 22l5.29-1.38a9.9 9.9 0 004.75 1.21h.01c5.46 0 9.91-4.45 9.91-9.92C21.96 6.45 17.5 2 12.04 2z" />
-          </svg>
-          Escribir por WhatsApp
+          <WhatsAppIcon />
+          Enviar por WhatsApp
         </a>
+
+        <div className="mt-5 space-y-1 border-t border-slate-800 pt-4 text-center text-xs text-slate-400">
+          <p>
+            ¿Prefieres llamar?{" "}
+            <a
+              href={`tel:${CONTACT.tel}`}
+              onClick={() => trackEvent("call_click", { origen: "formulario" })}
+              className="font-semibold text-cyan-400 hover:underline"
+            >
+              {CONTACT.telefono}
+            </a>
+          </p>
+          <p>{CONTACT.horario}</p>
+          <p>{CONTACT.ubicacion}</p>
+        </div>
       </div>
     </div>,
     document.body
@@ -341,6 +354,16 @@ function ProductGalleryModal({
             {product.title}
           </p>
           <p className="text-sm text-slate-400">{product.subtitle}</p>
+          <a
+            href={waLink(waProductMessage(product.title))}
+            target="_blank"
+            rel="noreferrer"
+            onClick={() => trackEvent("whatsapp_click", { origen: "galeria", producto: product.title })}
+            className="mt-3 inline-flex items-center justify-center gap-2 rounded-full bg-teal-500 px-5 py-2 text-sm font-bold text-white shadow-md transition-colors hover:bg-teal-400"
+          >
+            <WhatsAppIcon />
+            Cotizar este por WhatsApp
+          </a>
         </div>
 
         {media.length === 0 ? (
@@ -484,8 +507,22 @@ export default function HomeClient({ products }: { products: Product[] }) {
     };
   }, [menuOpen]);
 
+  const closeQuote = useCallback(() => setQuoteOpen(false), []);
+  const closeGallery = useCallback(() => setActiveProduct(null), []);
+
+  function openQuote(origen: string) {
+    setQuoteOpen(true);
+    trackEvent("cotizar_abierto", { origen });
+  }
+
+  function openGallery(p: Product) {
+    setActiveProduct(p);
+    trackEvent("galeria_abierta", { producto: p.title });
+  }
+
   const navLinks = [
     { label: "Productos", href: "#productos" },
+    { label: "Cómo funciona", href: "#como-funciona" },
     { label: "Por qué elegirnos", href: "#valor" },
   ];
 
@@ -539,8 +576,24 @@ export default function HomeClient({ products }: { products: Product[] }) {
 
   return (
     <main className="min-h-screen bg-white font-sans text-white selection:bg-cyan-500/30">
-      <QuoteModal open={quoteOpen} onClose={() => setQuoteOpen(false)} />
-      <ProductGalleryModal product={activeProduct} onClose={() => setActiveProduct(null)} />
+      <QuoteModal
+        open={quoteOpen}
+        onClose={closeQuote}
+        productTitles={products.map((p) => p.title)}
+      />
+      <ProductGalleryModal product={activeProduct} onClose={closeGallery} />
+
+      {/* Botón flotante de WhatsApp — solo móvil/tablet */}
+      <a
+        href={waLink()}
+        target="_blank"
+        rel="noreferrer"
+        aria-label="Cotizar por WhatsApp"
+        onClick={() => trackEvent("whatsapp_click", { origen: "flotante" })}
+        className="fixed bottom-5 right-5 z-40 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg shadow-black/30 transition-transform hover:scale-105 lg:hidden"
+      >
+        <WhatsAppIcon className="h-7 w-7" />
+      </a>
 
       {/* ============================= */}
       {/* NAVBAR (oscuro) */}
@@ -577,9 +630,9 @@ export default function HomeClient({ products }: { products: Product[] }) {
               ))}
             </div>
 
-            {/* Redes sociales — solo en escritorio (lg+). En móvil/tablet
-                viven dentro del menú hamburguesa, ver más abajo. */}
-            <div className="hidden items-center gap-2 lg:flex">
+            {/* Redes sociales — solo en pantallas anchas (xl+). En las
+                demás viven en la fila de abajo del navbar y en el footer. */}
+            <div className="hidden items-center gap-2 xl:flex">
               <a
                 href={SOCIAL_LINKS.instagram}
                 target="_blank"
@@ -611,7 +664,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
 
             <button
               type="button"
-              onClick={() => setQuoteOpen(true)}
+              onClick={() => openQuote("header")}
               className="inline-flex items-center justify-center rounded-full border-2 border-cyan-500 px-5 py-2 text-sm font-bold text-white transition-colors hover:bg-cyan-500/10"
             >
               Cotizar
@@ -661,7 +714,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
           siguen siendo las únicas visibles arriba. En móvil/tablet aparecen
           directamente debajo del navbar sin depender del menú hamburguesa. */}
       {/* ============================= */}
-      <div className="flex flex-wrap items-center justify-center gap-2 border-b border-slate-800 bg-slate-950 px-4 py-2.5 lg:hidden">
+      <div className="flex flex-wrap items-center justify-center gap-2 border-b border-slate-800 bg-slate-950 px-4 py-2.5 xl:hidden">
         <a
           href={SOCIAL_LINKS.instagram}
           target="_blank"
@@ -716,6 +769,23 @@ export default function HomeClient({ products }: { products: Product[] }) {
                 Diseñamos, fabricamos e instalamos anuncios luminosos de alta
                 calidad que destacan tu marca y atraen más clientes.
               </p>
+
+              <p className="mt-4 flex items-center gap-2 text-sm font-medium text-slate-300">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={1.8} className="h-4 w-4 flex-shrink-0 text-cyan-400" aria-hidden="true">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M12 21s-7-6.5-7-11.5A7 7 0 0119 9.5C19 14.5 12 21 12 21z" />
+                  <circle cx="12" cy="9.5" r="2.5" />
+                </svg>
+                {CONTACT.ciudad}, B.C. · Instalamos en {CONTACT.cobertura}
+              </p>
+
+              <button
+                type="button"
+                onClick={() => openQuote("hero")}
+                className="mt-6 inline-flex items-center justify-center gap-2 rounded-xl bg-teal-500 px-6 py-3 text-sm font-bold text-white shadow-md transition-colors hover:bg-teal-400"
+              >
+                <WhatsAppIcon />
+                Cotizar mi letrero
+              </button>
             </div>
 
             {/* Foto del hero: una sola imagen. En móvil/tablet va debajo del
@@ -782,7 +852,7 @@ export default function HomeClient({ products }: { products: Product[] }) {
                 <button
                   key={p.id}
                   type="button"
-                  onClick={() => setActiveProduct(p)}
+                  onClick={() => openGallery(p)}
                   aria-label={`Ver galería: ${p.title} ${p.subtitle}`}
                   className="group flex w-full flex-col overflow-hidden rounded-2xl border border-slate-200 bg-white text-left shadow-md transition-all hover:-translate-y-1 hover:shadow-xl focus:outline-none focus-visible:ring-2 focus-visible:ring-cyan-500"
                 >
@@ -868,13 +938,18 @@ export default function HomeClient({ products }: { products: Product[] }) {
             </svg>
           </div>
 
+          <ClientsStrip />
+          <Testimonials />
+          <HowItWorks />
+          <QuoteRequirements />
+
           {/* ============================= */}
           {/* CTA FINAL */}
           {/* ============================= */}
           <div className="mt-10 text-center sm:mt-12">
             <button
               type="button"
-              onClick={() => setQuoteOpen(true)}
+              onClick={() => openQuote("final")}
               className="inline-flex w-full items-center justify-center rounded-xl bg-teal-500 px-8 py-4 text-base font-bold text-white shadow-md transition-colors hover:bg-teal-400 sm:w-auto"
             >
               Solicitar una cotización
@@ -893,57 +968,108 @@ export default function HomeClient({ products }: { products: Product[] }) {
       {/* ============================= */}
       {/* FOOTER (oscuro) */}
       {/* ============================= */}
-      <footer className="border-t border-slate-800 bg-slate-950 py-8">
-        <div className="mx-auto flex max-w-7xl flex-col flex-wrap items-center gap-6 px-5 text-center sm:flex-row sm:justify-between sm:px-8 sm:text-left">
-          <div className="flex items-center gap-3">
-            <div className="flex items-center gap-1.5 text-xl font-extrabold leading-none">
-              <span className="text-cyan-400">N</span>
-              <span className="h-5 w-px bg-slate-700" />
-              <span className="text-amber-400">D</span>
+      <footer className="border-t border-slate-800 bg-slate-950 pb-24 pt-10 lg:pb-8">
+        <div className="mx-auto grid max-w-7xl gap-8 px-5 sm:px-8 md:grid-cols-3">
+          {/* Marca + redes */}
+          <div>
+            <div className="flex items-center gap-3">
+              <div className="flex items-center gap-1.5 text-xl font-extrabold leading-none">
+                <span className="text-cyan-400">N</span>
+                <span className="h-5 w-px bg-slate-700" />
+                <span className="text-amber-400">D</span>
+              </div>
+              <div className="leading-tight">
+                <p className="text-sm font-bold tracking-wide text-cyan-400">NEON DECOR</p>
+                <p className="text-[10px] font-medium tracking-widest text-slate-500">
+                  ANUNCIOS LUMINOSOS
+                </p>
+              </div>
             </div>
-            <div className="leading-tight">
-              <p className="text-sm font-bold tracking-wide text-cyan-400">NEON DECOR</p>
-              <p className="text-[10px] font-medium tracking-widest text-slate-500">
-                ANUNCIOS LUMINOSOS
-              </p>
+            <p className="mt-4 text-sm text-slate-400">
+              Transformamos espacios.{" "}
+              <span className="font-semibold text-cyan-400">Hacemos brillar tu marca.</span>
+            </p>
+            <div className="mt-4 flex flex-wrap gap-2">
+              <a
+                href={SOCIAL_LINKS.instagram}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-full border border-slate-600 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400 hover:text-cyan-400"
+              >
+                <InstagramIcon className="h-4 w-4" />
+                Instagram
+              </a>
+              <a
+                href={SOCIAL_LINKS.facebook}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-full border border-slate-600 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400 hover:text-cyan-400"
+              >
+                <FacebookIcon className="h-4 w-4" />
+                Facebook
+              </a>
+              <a
+                href={SOCIAL_LINKS.tiktok}
+                target="_blank"
+                rel="noreferrer"
+                className="flex items-center gap-2 rounded-full border border-slate-600 bg-slate-900 px-3 py-1.5 text-xs font-semibold text-slate-200 transition-colors hover:border-cyan-400 hover:text-cyan-400"
+              >
+                <TikTokIcon className="h-4 w-4" />
+                TikTok
+              </a>
             </div>
           </div>
 
-          <p className="text-sm text-slate-400">
-            Transformamos espacios.{" "}
-            <span className="font-semibold text-cyan-400">Hacemos brillar tu marca.</span>
-          </p>
-
-          {/* Redes sociales — ver SOCIAL_LINKS al inicio del archivo */}
-          <div className="flex flex-shrink-0 flex-wrap items-center justify-center gap-2.5">
-            <a
-              href={SOCIAL_LINKS.instagram}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 rounded-full border border-slate-600 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-400"
-            >
-              <InstagramIcon className="h-4 w-4" />
-              Instagram
-            </a>
-            <a
-              href={SOCIAL_LINKS.facebook}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 rounded-full border border-slate-600 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-400"
-            >
-              <FacebookIcon className="h-4 w-4" />
-              Facebook
-            </a>
-            <a
-              href={SOCIAL_LINKS.tiktok}
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-2 rounded-full border border-slate-600 bg-slate-900 px-4 py-2 text-sm font-semibold text-slate-200 transition-colors hover:border-cyan-400 hover:bg-cyan-500/10 hover:text-cyan-400"
-            >
-              <TikTokIcon className="h-4 w-4" />
-              TikTok
-            </a>
+          {/* Contacto */}
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">Contacto</p>
+            <ul className="mt-4 space-y-2 text-sm text-slate-300">
+              <li>
+                <a
+                  href={waLink()}
+                  target="_blank"
+                  rel="noreferrer"
+                  onClick={() => trackEvent("whatsapp_click", { origen: "footer" })}
+                  className="hover:text-cyan-400"
+                >
+                  WhatsApp: {CONTACT.telefono}
+                </a>
+              </li>
+              <li>
+                <a
+                  href={`tel:${CONTACT.tel}`}
+                  onClick={() => trackEvent("call_click", { origen: "footer" })}
+                  className="hover:text-cyan-400"
+                >
+                  Teléfono: {CONTACT.telefono}
+                </a>
+              </li>
+              <li>
+                <a href={`mailto:${CONTACT.email}`} className="break-all hover:text-cyan-400">
+                  {CONTACT.email}
+                </a>
+              </li>
+            </ul>
           </div>
+
+          {/* Horario y ubicación */}
+          <div>
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-slate-500">
+              Horario y ubicación
+            </p>
+            <ul className="mt-4 space-y-2 text-sm text-slate-300">
+              <li>{CONTACT.horario}</li>
+              <li>{CONTACT.ubicacion}</li>
+              <li>Instalamos en {CONTACT.cobertura}</li>
+            </ul>
+          </div>
+        </div>
+
+        <div className="mx-auto mt-8 flex max-w-7xl flex-col items-center gap-2 border-t border-slate-800 px-5 pt-6 text-xs text-slate-500 sm:flex-row sm:justify-between sm:px-8">
+          <p>© {new Date().getFullYear()} Neon Decor. Todos los derechos reservados.</p>
+          <Link href="/aviso-de-privacidad" className="hover:text-cyan-400">
+            Aviso de privacidad
+          </Link>
         </div>
       </footer>
     </main>
