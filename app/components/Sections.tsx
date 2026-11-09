@@ -90,14 +90,14 @@ export function HowItWorks() {
         {STEPS.map((step, i) => (
           <li
             key={step.title}
-            className="flex items-start gap-4 rounded-2xl border border-slate-200 bg-white p-4 shadow-sm lg:block lg:p-5"
+            className="flex items-start gap-4 rounded-2xl border border-slate-800 bg-slate-950 p-4 shadow-md transition-colors hover:border-cyan-400/60 lg:block lg:p-5"
           >
-            <span className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-full bg-slate-950 text-sm font-bold text-cyan-400">
+            <span className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-full bg-cyan-400/10 text-sm font-bold text-cyan-400 shadow-[0_0_14px_rgba(34,211,238,0.35)] ring-1 ring-cyan-400/60">
               {i + 1}
             </span>
             <div>
-              <p className="font-bold text-slate-900 lg:mt-3">{step.title}</p>
-              <p className="mt-1 text-sm text-slate-500">{step.text}</p>
+              <p className="font-bold text-white lg:mt-3">{step.title}</p>
+              <p className="mt-1 text-sm text-slate-400">{step.text}</p>
             </div>
           </li>
         ))}
@@ -108,24 +108,27 @@ export function HowItWorks() {
 
 export function QuoteRequirements() {
   return (
-    <div className="mt-14 rounded-3xl border border-slate-200 bg-slate-50 p-6 sm:mt-20 sm:p-10">
-      <SectionHeading eyebrow="Antes de cotizar" title="Para cotizarte rápido necesitamos" />
+    <div className="mt-14 rounded-3xl bg-slate-950 bg-[radial-gradient(ellipse_at_top,rgba(34,211,238,0.12),transparent_60%)] p-6 sm:mt-20 sm:p-10">
+      <p className="text-center text-xs font-bold uppercase tracking-[0.2em] text-cyan-400">Antes de cotizar</p>
+      <h2 className="mt-2 text-center text-2xl font-extrabold tracking-tight text-white sm:text-3xl">
+        Para cotizarte rápido <span className="text-cyan-400">necesitamos</span>
+      </h2>
       <ul className="mt-8 grid gap-5 sm:grid-cols-2 lg:grid-cols-4">
         {REQUIREMENTS.map((r) => (
           <li key={r.title} className="flex items-start gap-3">
-            <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-cyan-500/10 text-cyan-600 ring-1 ring-cyan-500/40">
+            <span className="mt-0.5 flex h-6 w-6 flex-shrink-0 items-center justify-center rounded-full bg-cyan-400/10 text-cyan-400 ring-1 ring-cyan-400/40">
               <svg className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3} aria-hidden="true">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
               </svg>
             </span>
             <span>
-              <span className="block font-bold text-slate-900">{r.title}</span>
-              <span className="block text-sm text-slate-500">{r.text}</span>
+              <span className="block font-bold text-white">{r.title}</span>
+              <span className="block text-sm text-slate-400">{r.text}</span>
             </span>
           </li>
         ))}
       </ul>
-      <p className="mt-6 text-center text-sm text-slate-500">
+      <p className="mt-6 text-center text-sm text-slate-400">
         ¿No tienes todo? No pasa nada, escríbenos y te guiamos.
       </p>
     </div>
